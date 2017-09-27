@@ -19,6 +19,7 @@ var runSequence = require('run-sequence');
 var browserSync = require('browser-sync');
 var reload = browserSync.reload;
 var path = require('path');
+var uglify = require('gulp-uglify-es').default;
 
 
 var DIST = 'dist';
@@ -29,8 +30,9 @@ var dist = function(subpath) {
 
 var styleTask = function(stylesPath, srcs) {
   return gulp
-      .src(
-          srcs.map(function(src) { return path.join('app', stylesPath, src); }))
+      .src(srcs.map(function(src) {
+        return path.join('app', stylesPath, src);
+      }))
       .pipe($.changed(stylesPath, {extension: '.css'}))
       .pipe(gulp.dest('.tmp/' + stylesPath))
       .pipe($.minifyCss())
@@ -43,23 +45,23 @@ var optimizeHtmlTask = function(src, dest) {
   return gulp.src(src)
       .pipe(assets)
       // Concatenate and minify JavaScript
-      .pipe($.if ('*.js', $.uglify()))
+      .pipe($.if('*.js', uglify()))
       // Concatenate and minify styles
-      .pipe($.if ('*.css', $.minifyCss()))
+      .pipe($.if('*.css', $.minifyCss()))
       .pipe(assets.restore())
       .pipe($.useref())
       // Minify any HTML
-      .pipe($.if ('*.html', $.minifyHtml({
-                    quotes: true,
-                    empty: true,
-                    spare: true
-                  })))
+      .pipe($
+                .if('*.html',
+                    $.minifyHtml({quotes: true, empty: true, spare: true})))
       // Output files
       .pipe(gulp.dest(dest));
 };
 
 // Compile stylesheets.
-gulp.task('styles', function() { return styleTask('styles', ['**/*.css']); });
+gulp.task('styles', function() {
+  return styleTask('styles', ['**/*.css']);
+});
 
 // Copy all files at the root level.
 gulp.task('copy', function() {
@@ -85,7 +87,9 @@ gulp.task('vulcanize', function() {
 });
 
 // Clean output directory.
-gulp.task('clean', function() { return del(['.tmp', dist()]); });
+gulp.task('clean', function() {
+  return del(['.tmp', dist()]);
+});
 
 // Start dev server.
 gulp.task('serve', function() {
@@ -98,8 +102,9 @@ gulp.task('serve', function() {
 });
 
 // Build and serve the output from the dist build.
-gulp.task(
-    'serve:dist', ['default'], function() { browserSync({server: dist()}); });
+gulp.task('serve:dist', ['default'], function() {
+  browserSync({server: dist()});
+});
 
 // Build production files, the default task.
 gulp.task('default', ['clean'], function(cb) {
